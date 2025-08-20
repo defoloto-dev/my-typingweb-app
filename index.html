@@ -1,10 +1,11 @@
+Fun Typo Prkk
 
 <!doctype html>
 <html lang="de">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Typing Practice — Adaptive (Coins & Levels)</title>
+  <title>Typing Practice — Adaptive ( Coins & Levels)</title>
 
   <style>
     :root{
@@ -127,6 +128,12 @@
 
     .char.correct{ color:#03894c; }
     .char.incorrect{ color:#d32f2f; background:rgba(211,47,47,0.06); }
+    
+    /* NEU: Level und Multiplikator in Rot anzeigen */
+    #level.value, #multiplierDisplay.value {
+      color: #d32f2f;
+    }
+    
     .char.current{
       text-decoration:underline;
       text-decoration-color:var(--accent);
@@ -194,7 +201,7 @@
   <div class="app" role="main">
 
     <header>
-      <h1>Typing Practice — adaptive</h1>
+      <h1>Typing Practice — adaptive </h1>
 
       <div class="controls" aria-hidden="false">
         <label>
@@ -221,6 +228,7 @@
       <div class="stat">Zeit: <strong id="time" class="value">0s</strong></div>
       <div class="stat">Coins: <strong id="coins" class="value">0</strong></div>
       <div class="stat">Level: <strong id="level" class="value">—</strong></div>
+      <div class="stat" style="margin-left: auto;">Multiplier: <strong id="multiplierDisplay" class="value">x1</strong></div>
     </div>
 
     <footer>
@@ -472,11 +480,15 @@
       updateStats(){
         const secs = this.startTime ? Math.floor((Date.now() - this.startTime)/1000) : 0;
         const minutes = Math.max(0.001, secs/60);
-        const wpm = Math.round((this.correctCount/5) / minutes);
-        const acc = this.typedCount > 0 ? Math.round((this.correctCount / this.typedCount)*100) : 100;
-
+        
         const stats = loadStats();
         const multiplier = stats.multiplier || 1;
+        
+        // NEU: WPM wird mit dem Multiplikator berechnet
+        const wpm = Math.round(((this.correctCount / 5) / minutes) * multiplier);
+        const acc = this.typedCount > 0 ? Math.round((this.correctCount / this.typedCount) * 100) : 100;
+        
+        // Coins werden ebenfalls mit dem Multiplikator berechnet
         this.coinsEarned = this.correctCount * multiplier;
 
         document.getElementById('wpm').textContent = String(wpm);
@@ -491,10 +503,15 @@
 
         const secs = this.startTime ? Math.max(1, Math.floor((Date.now() - this.startTime)/1000)) : 0;
         const minutes = Math.max(0.001, secs/60);
-        const wpm = Math.round((this.correctCount/5) / minutes);
-        const acc = this.typedCount > 0 ? Math.round((this.correctCount / this.typedCount)*100) : 100;
-
+        
         const stats = loadStats();
+        const multiplier = stats.multiplier || 1;
+
+        // NEU: WPM und Coins werden hier für den finalen Speicherstand korrekt berechnet
+        const wpm = Math.round(((this.correctCount / 5) / minutes) * multiplier);
+        const acc = this.typedCount > 0 ? Math.round((this.correctCount / this.typedCount) * 100) : 100;
+        this.coinsEarned = this.correctCount * multiplier;
+
         stats.coins += this.coinsEarned;
         stats.sessions.push({
           date: new Date().toISOString(),
@@ -653,7 +670,7 @@
           ${buttonsHtml}
           <button id="resetMul" class="btn-ghost">Multiplikator zurücksetzen</button>
         </div>
-        <p class="small" style="margin-top:8px;">Der Multiplikator beeinflusst nur neue Sessions (Coins = korrekte Zeichen × Multiplikator).</p>
+        <p class="small" style="margin-top:8px;">Der Multiplikator beeinflusst WPM und Coins in neuen Sessions (Coins = korrekte Zeichen × Multiplikator).</p>
       `;
       showModal("Coin-Shop", html);
 
@@ -667,6 +684,8 @@
               s.multiplier = item.mult;
               saveStats(s);
               document.getElementById('coins').textContent = formatNumber(s.coins);
+              // NEU: Anzeige aktualisieren
+              document.getElementById('multiplierDisplay').textContent = `x${s.multiplier}`;
               showModal("Kauf erfolgreich", `<p>Gekauft: <strong>x${s.multiplier}</strong>. Neuer Stand: ${formatNumber(s.coins)} Coins.</p>`);
             } else {
               showModal("Fehler", `<p>Nicht genug Coins für x${item.mult} (benötigt ${formatNumber(item.price)}).</p>`);
@@ -678,6 +697,8 @@
           const s = loadStats();
           s.multiplier = 1; 
           saveStats(s);
+          // NEU: Anzeige aktualisieren
+          document.getElementById('multiplierDisplay').textContent = `x1`;
           showModal("Coin-Shop", `<p>Multiplikator zurückgesetzt auf <strong>x1</strong>.</p>`);
         });
       }, 0);
@@ -694,6 +715,8 @@
         document.getElementById('acc').textContent = '100%';
         document.getElementById('time').textContent = '0s';
         document.getElementById('level').textContent = '—';
+        // NEU: Anzeige aktualisieren
+        document.getElementById('multiplierDisplay').textContent = 'x1';
         document.getElementById('display').innerHTML = '';
         if (window.currentSession) {
           window.currentSession.detachEvents();
@@ -713,13 +736,14 @@
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     });
     
-    // Initialen Coin-Stand laden und anzeigen
+    // Initialen Coin-Stand und Multiplikator laden und anzeigen
     window.addEventListener('load', ()=>{
         const stats = loadStats();
         document.getElementById('coins').textContent = formatNumber(stats.coins);
+        // NEU: Anzeige beim Laden setzen
+        document.getElementById('multiplierDisplay').textContent = `x${stats.multiplier || 1}`;
         document.getElementById('display')?.focus();
     });
   </script>
 </body>
 </html>
-
