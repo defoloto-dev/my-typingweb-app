@@ -751,27 +751,7 @@ document.getElementById('shop').addEventListener('click', ()=>{
       a.href = url; a.download = 'typing_stats.json';
       document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
     });
-    // 🎉 Endgame Checker – eigenes Script
-(function(){
-  let endGameShown = false;
 
-  // Überwacht permanent den WPM-Wert
-  setInterval(() => {
-    const wpmElement = document.getElementById('wpm');
-    if (!wpmElement) return;
-
-    const currentWPM = parseInt(wpmElement.textContent.replace(/\D/g, '')) || 0;
-
-    if (!endGameShown && currentWPM > 100000) {
-      endGameShown = true;
-      showModal("🎉 Congratulation 🎉", `
-        <p style="font-size:18px; font-weight:bold; text-align:center;">
-          You have beat the game !!
-        </p>
-      `);
-    }
-  }, 1000); // prüft jede Sekunde
-})();
     
     // Initialen Coin-Stand und Multiplikator laden und anzeigen
     window.addEventListener('load', ()=>{
