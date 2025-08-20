@@ -1,5 +1,3 @@
-Fun Typo Prkk
-
 <!doctype html>
 <html lang="de">
 <head>
@@ -117,7 +115,6 @@ Fun Typo Prkk
       line-height:1.6;
       font-family:monospace;
       color:#111;
-      /* Keine harte Zeile: bricht an Bildschirmbreite */
       white-space:normal;
       word-wrap:break-word;
       overflow:hidden;
@@ -129,7 +126,7 @@ Fun Typo Prkk
     .char.correct{ color:#03894c; }
     .char.incorrect{ color:#d32f2f; background:rgba(211,47,47,0.06); }
     
-    /* NEU: Level und Multiplikator in Rot anzeigen */
+    /* Level- und Multiplikatoranzeige in Rot */
     #level.value, #multiplierDisplay.value {
       color: #d32f2f;
     }
@@ -304,7 +301,7 @@ Fun Typo Prkk
       if (wpm < 1000) return "Keyboard-Demigod";
       if (wpm < 5000) return "Quantum Finger";
       if (wpm < 10000) return "Typo Singularity";
-      if (wpm < 100000) return "Omega Being"; // Abdeckung des Bereichs bis 100k
+      if (wpm < 100000) return "Omega Being";
       return "The Final Key";
     }
 
@@ -334,9 +331,7 @@ Fun Typo Prkk
 
     /*
       ================================================================================
-      Textgenerator: echte Wörter optional, hier simple Pseudowörter + SPACES
-      - Hält die Länge <= limit (Default 40)
-      - Enthält Leerzeichen zwischen Wörtern
+      Textgenerator
       ================================================================================
     */
     function generateText(limit = 40){
@@ -346,7 +341,6 @@ Fun Typo Prkk
         const wordLen = 2 + Math.floor(Math.random()*6); // 2-7
         let word = "";
         for(let i=0;i<wordLen;i++){
-          // Kleinbuchstaben a-z
           word += String.fromCharCode(97 + Math.floor(Math.random()*26));
         }
         const candidate = (text.length ? " " : "") + word;
@@ -359,9 +353,7 @@ Fun Typo Prkk
     /*
       ================================================================================
       TypingSession
-      - Verwaltet Eingaben, WPM, Accuracy, Zeit
-      - Vergibt Coins (mit aktivem Multiplikator)
-      - Stop/Finish
+      - WPM & Coins werden durch den Multiplikator beeinflusst
       ================================================================================
     */
     class TypingSession{
@@ -383,7 +375,6 @@ Fun Typo Prkk
         const display = document.getElementById('display');
         display.innerHTML = '';
         this.spans = [];
-        // Zeichenweise rendern → cursor/highlights pro char
         for(let i=0;i<this.target.length;i++){
           const ch = this.target[i];
           const span = document.createElement('span');
@@ -394,7 +385,6 @@ Fun Typo Prkk
         }
         this.index = 0;
         if(this.spans.length){ this.spans[0].classList.add('current'); }
-        // Reset visible stats
         document.getElementById('wpm').textContent = '0';
         document.getElementById('acc').textContent = '100%';
         document.getElementById('time').textContent = '0s';
@@ -404,12 +394,9 @@ Fun Typo Prkk
         display.focus();
       }
 
-
-
       attachEvents(){
         this.keyHandler = (e)=>this.onKey(e);
         document.addEventListener('keydown', this.keyHandler);
-        // Paste verhindern (Cheat)
         this.pasteHandler = (e)=>e.preventDefault();
         document.getElementById('display').addEventListener('paste', this.pasteHandler);
       }
@@ -421,7 +408,6 @@ Fun Typo Prkk
       }
 
       onKey(e){
-        // Backspace Handling
         if(e.key === 'Backspace'){
           e.preventDefault();
           if(this.index === 0) return;
@@ -439,17 +425,15 @@ Fun Typo Prkk
           return;
         }
 
-        // Nur einzelne sichtbare Zeichen inkl. Space verarbeiten
         if(typeof e.key !== 'string' || e.key.length !== 1) return;
         e.preventDefault();
 
-        // Start Timer beim ersten Tastenanschlag
         if(this.startTime === null){
           this.startTime = Date.now();
           this.timerInterval = setInterval(()=>this.updateStats(), 200);
         }
 
-        if(this.index >= this.target.length) return; // redundant, safety
+        if(this.index >= this.target.length) return;
         const expected = this.target[this.index];
         const typed = e.key;
 
@@ -471,7 +455,7 @@ Fun Typo Prkk
         if(this.index < this.spans.length){
           this.spans[this.index]?.classList.add('current');
         }else{
-          this.finish(); // Ende erreicht
+          this.finish();
         }
 
         this.updateStats();
@@ -484,11 +468,11 @@ Fun Typo Prkk
         const stats = loadStats();
         const multiplier = stats.multiplier || 1;
         
-        // NEU: WPM wird mit dem Multiplikator berechnet
+        // WPM mit Multiplikator
         const wpm = Math.round(((this.correctCount / 5) / minutes) * multiplier);
         const acc = this.typedCount > 0 ? Math.round((this.correctCount / this.typedCount) * 100) : 100;
         
-        // Coins werden ebenfalls mit dem Multiplikator berechnet
+        // Coins mit Multiplikator
         this.coinsEarned = this.correctCount * multiplier;
 
         document.getElementById('wpm').textContent = String(wpm);
@@ -507,7 +491,6 @@ Fun Typo Prkk
         const stats = loadStats();
         const multiplier = stats.multiplier || 1;
 
-        // NEU: WPM und Coins werden hier für den finalen Speicherstand korrekt berechnet
         const wpm = Math.round(((this.correctCount / 5) / minutes) * multiplier);
         const acc = this.typedCount > 0 ? Math.round((this.correctCount / this.typedCount) * 100) : 100;
         this.coinsEarned = this.correctCount * multiplier;
@@ -519,7 +502,6 @@ Fun Typo Prkk
         });
         saveStats(stats);
 
-        // Kleines Finish-Modal (statt alert)
         showModal(
           "Session beendet",
           `
@@ -584,7 +566,7 @@ Fun Typo Prkk
       }
     });
 
-    // Alle Scores (schönes Popup mit Tabelle)
+    // Alle Scores
     document.getElementById('showScores').addEventListener('click', ()=>{
       const stats = loadStats();
       if(!stats.sessions.length){
@@ -601,7 +583,7 @@ Fun Typo Prkk
           <td>+${formatNumber(s.coins)}</td>
           <td><span class="badge">${s.level}</span></td>
         </tr>
-      `).reverse().join(""); // Neueste zuerst
+      `).reverse().join("");
 
       const listItems = getAllLevels().map(l => {
           if (l.isHeader) {
@@ -637,7 +619,7 @@ Fun Typo Prkk
       showModal("Alle Scores", html);
     });
 
-    // Level-Liste separater Button
+    // Level-Liste
     document.getElementById('showLevels').addEventListener('click', ()=>{
       const list = getAllLevels().map(l => {
           if (l.isHeader) {
@@ -648,7 +630,7 @@ Fun Typo Prkk
       showModal("Level-Liste", `<ul style="padding-left: 20px;">${list}</ul>`);
     });
 
-    // NEUER Coin-Shop
+    // Coin-Shop inkl. x1000 (10x teurer als x100)
     document.getElementById('shop').addEventListener('click', ()=>{
       const stats = loadStats();
       const shopItems = [
@@ -658,6 +640,7 @@ Fun Typo Prkk
         { id: 'buyX5', mult: 5, price: 15000 },
         { id: 'buyX10', mult: 10, price: 100000 },
         { id: 'buyX100', mult: 100, price: 1000000 },
+        { id: 'buyX1000', mult: 1000, price: 10000000 }, // NEU
       ];
       
       const buttonsHtml = shopItems.map(item => 
@@ -684,7 +667,6 @@ Fun Typo Prkk
               s.multiplier = item.mult;
               saveStats(s);
               document.getElementById('coins').textContent = formatNumber(s.coins);
-              // NEU: Anzeige aktualisieren
               document.getElementById('multiplierDisplay').textContent = `x${s.multiplier}`;
               showModal("Kauf erfolgreich", `<p>Gekauft: <strong>x${s.multiplier}</strong>. Neuer Stand: ${formatNumber(s.coins)} Coins.</p>`);
             } else {
@@ -697,7 +679,6 @@ Fun Typo Prkk
           const s = loadStats();
           s.multiplier = 1; 
           saveStats(s);
-          // NEU: Anzeige aktualisieren
           document.getElementById('multiplierDisplay').textContent = `x1`;
           showModal("Coin-Shop", `<p>Multiplikator zurückgesetzt auf <strong>x1</strong>.</p>`);
         });
@@ -715,7 +696,6 @@ Fun Typo Prkk
         document.getElementById('acc').textContent = '100%';
         document.getElementById('time').textContent = '0s';
         document.getElementById('level').textContent = '—';
-        // NEU: Anzeige aktualisieren
         document.getElementById('multiplierDisplay').textContent = 'x1';
         document.getElementById('display').innerHTML = '';
         if (window.currentSession) {
@@ -740,7 +720,6 @@ Fun Typo Prkk
     window.addEventListener('load', ()=>{
         const stats = loadStats();
         document.getElementById('coins').textContent = formatNumber(stats.coins);
-        // NEU: Anzeige beim Laden setzen
         document.getElementById('multiplierDisplay').textContent = `x${stats.multiplier || 1}`;
         document.getElementById('display')?.focus();
     });
