@@ -631,31 +631,67 @@
     });
 
     // Coin-Shop inkl. x1000 (10x teurer als x100)
-    document.getElementById('shop').addEventListener('click', ()=>{
-      const stats = loadStats();
-      const shopItems = [
-        { id: 'buyX2', mult: 2, price: 500 },
-        { id: 'buyX3', mult: 3, price: 2000 },
-        { id: 'buyX4', mult: 4, price: 5000 },
-        { id: 'buyX5', mult: 5, price: 15000 },
-        { id: 'buyX10', mult: 10, price: 100000 },
-        { id: 'buyX100', mult: 100, price: 1000000 },
-        { id: 'buyX1000', mult: 1000, price: 10000000 }, // NEU
-      ];
-      
-      const buttonsHtml = shopItems.map(item => 
-        `<button id="${item.id}" ${stats.coins < item.price ? 'disabled' : ''}>Kaufe x${item.mult} (${formatNumber(item.price)} Coins)</button>`
-      ).join('');
+// NEUER Coin-Shop
+document.getElementById('shop').addEventListener('click', ()=>{
+  const stats = loadStats();
+  const shopItems = [
+    { id: 'buyX2', mult: 2, price: 500 },
+    { id: 'buyX3', mult: 3, price: 2000 },
+    { id: 'buyX4', mult: 4, price: 5000 },
+    { id: 'buyX5', mult: 5, price: 15000 },
+    { id: 'buyX10', mult: 10, price: 100000 },
+    { id: 'buyX100', mult: 100, price: 1000000 },
+    // NEU: x1000 Multiplikator (10x teurer als x100)
+    { id: 'buyX1000', mult: 1000, price: 10000000 },
+  ];
+  
+  const buttonsHtml = shopItems.map(item => 
+    `<button id="${item.id}" ${stats.coins < item.price ? 'disabled' : ''}>
+      Kaufe x${item.mult} (${formatNumber(item.price)} Coins)
+    </button>`
+  ).join('');
 
-      const html = `
-        <p>Coins: <strong>${formatNumber(stats.coins)}</strong> &nbsp;•&nbsp; Aktueller Multiplikator: <strong>x${stats.multiplier}</strong></p>
-        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-          ${buttonsHtml}
-          <button id="resetMul" class="btn-ghost">Multiplikator zurücksetzen</button>
-        </div>
-        <p class="small" style="margin-top:8px;">Der Multiplikator beeinflusst WPM und Coins in neuen Sessions (Coins = korrekte Zeichen × Multiplikator).</p>
-      `;
-      showModal("Coin-Shop", html);
+  const html = `
+    <p>Coins: <strong>${formatNumber(stats.coins)}</strong> 
+    &nbsp;•&nbsp; Aktueller Multiplikator: 
+    <strong id="currentMul">x${stats.multiplier}</strong></p>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      ${buttonsHtml}
+      <button id="resetMul" class="btn-ghost">Multiplikator zurücksetzen</button>
+    </div>
+    <p class="small" style="margin-top:8px;">
+      Der Multiplikator beeinflusst WPM und Coins in neuen Sessions.
+    </p>
+  `;
+  showModal("Coin-Shop", html);
+
+  // Buttons anbinden
+  setTimeout(()=>{
+    shopItems.forEach(item => {
+      document.getElementById(item.id)?.addEventListener('click', () => {
+        const s = loadStats();
+        if ((s.coins || 0) >= item.price) {
+          s.coins -= item.price;
+          s.multiplier = item.mult;
+          saveStats(s);
+          document.getElementById('coins').textContent = formatNumber(s.coins);
+          document.getElementById('multiplierDisplay').textContent = `x${s.multiplier}`;
+          showModal("Kauf erfolgreich", `<p>Neuer Multiplikator: <strong>x${s.multiplier}</strong><br>Coins: ${formatNumber(s.coins)}</p>`);
+        } else {
+          showModal("Fehler", `<p>Nicht genug Coins für x${item.mult} (benötigt ${formatNumber(item.price)}).</p>`);
+        }
+      });
+    });
+    
+    document.getElementById('resetMul')?.addEventListener('click', ()=>{
+      const s = loadStats();
+      s.multiplier = 1; 
+      saveStats(s);
+      document.getElementById('multiplierDisplay').textContent = `x1`;
+      showModal("Coin-Shop", `<p>Multiplikator zurückgesetzt auf <strong>x1</strong>.</p>`);
+    });
+  }, 0);
+});
 
       // Buttons erst NACH dem Rendern anbinden
       setTimeout(()=>{
